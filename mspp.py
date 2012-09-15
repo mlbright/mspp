@@ -47,31 +47,51 @@ def write_csv(instrument):
     with open(instrument + '.csv','w') as f:
         f.write(get_daily_csv(instrument,2000,2012))
 
-def load_exercise_data(csvfile):
-    closing_prices = []
-    exercise_data = []
-    oct_re = re.compile(r'.+-10-\d\d$')
-    apr_re = re.compile(r'.+-04-\d\d$')
+def load_data(csvfile):
+    closing = []
 
     with open(csvfile, 'rb') as f:
         reader = csv.reader(f)
         for row in reader:
-            closing_prices.append((row[0],row[-1]))
-    
-    assert len(closing_prices) >= 2
-    for current,next in zip(closing_prices,closing_prices[1:]):
+            closing.append((row[0],row[-1]))
+
+    return closing
+
+def offering_data(closing_data):
+    assert len(closing_data) >= 2
+    oct_re = re.compile(r'.+-10-\d\d$')
+    apr_re = re.compile(r'.+-04-\d\d$')
+    offering = []
+
+    for current,next in zip(closing_data,closing_data[1:]):
         for regex in (oct_re,apr_re):
             if regex.match(current[0]) and not regex.match(next[0]):
-                exercise_data.append(current)
+                offering.append(current)
                 break
         
-    exercise_data.reverse()    
-    return exercise_data
+    offering.reverse()    
+    return offering
 
-def buy_and_hold(exercise_data):
+def exercise_data(closing_data):
+    exercise = []
+    mar_re = re.compile(r'.+-03-\d\d$')
+    sep_re = re.compile(r'.+-09-\d\d$')
+
+    for current,next in zip(closing_data,closing_data[1:]):
+        for regex in (mar_re,sep_re):
+            if not regex.match(current[0]) and regex.match(next[0]):
+                exercise.append(next)
+                break
+        
+    exercise.reverse()
+    return exercise
+
+def buy_and_hold(offering_data):
     pass 
         
 if __name__ == "__main__":
     company = sys.argv[1]
-    write_csv(company)
-    print load_exercise_data(company + '.csv')
+    #write_csv(company)
+    closing_data = load_data(company + '.csv')
+    print offering_data(closing_data)
+    print exercise_data(closing_data)
