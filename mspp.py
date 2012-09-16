@@ -86,12 +86,33 @@ def exercise_data(closing_data):
     exercise.reverse()
     return exercise
 
-def buy_and_hold(offering_data):
-    pass 
+def buy_and_hold(offering,exercise):
+    shares = 0
+    contribution = 1000
+    count = 4
+    for off,ex in zip(offering,exercise[1:]):
+        
+        count -= 1
+        
+        price = 0.85 * min(float(ex[1]),float(off[1])) * 1.0
+        shares += contribution / price
+        
+        print "%s %s %s %s" % (off[0],off[1],ex[0],ex[1]),
+        
+        if ex[1] < off[1] or count == 0:
+            count = 4
+            print "reset"
+        else:
+            print "no reset"
+        
+        
+    print shares
+
         
 if __name__ == "__main__":
     company = sys.argv[1]
     #write_csv(company)
     closing_data = load_data(company + '.csv')
-    print offering_data(closing_data)
-    print exercise_data(closing_data)
+    offering_prices = offering_data(closing_data)
+    exercise_prices = exercise_data(closing_data)
+    buy_and_hold(offering_prices,exercise_prices)
