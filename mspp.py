@@ -164,24 +164,19 @@ def print_offering_dates(offering):
 
 class MSPP(object):
 
-    def __init__(self,company):
-        self.parser = None
-        self.contribution = None
+    def __init__(self,company,offering_date=None,bootstrap=False):
         self.company = company
-        self.closing = None
-        self.offering = None
-        self.exercise = None
-        self.lookback = None
-        self.exercise_periods = None
-
-    def compare(self):
+        if bootstrap:
+            write_csv(self.company)
+        self.parser = None
         self.contribution = 120 * 2 * 6
-        self.company = sys.argv[1]
         self.closing = load_closing_data(self.company + '.csv')
         self.offering = offering(self.closing)
         self.exercise = exercise(self.closing)
-        self.exercise_periods = exercise_periods(self.offering,self.exercise)
+        self.exercise_periods = exercise_periods(self.offering,self.exercise,offering_date)
         self.lookback = lookback(self.exercise_periods)
+
+    def compare(self):
         shares = buy_and_hold(self.lookback,self.contribution)
         print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,self.closing[0][1],shares * self.closing[0][1])
         print "buy and sell profit: %.2f" % (buy_and_sell(self.lookback,self.contribution))
@@ -193,6 +188,7 @@ class MSPP(object):
         print_offering_dates(self.offering)
         
 if __name__ == "__main__":
-    mspp = MSPP('adsk')
-    mspp.bootstrap()
+    company = sys.argv[1]
+    mspp = MSPP(company,'2010-04-01',bootstrap=True)
+    #mspp.offering_dates()
     mspp.compare()
