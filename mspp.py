@@ -161,20 +161,38 @@ def print_offering_dates(offering):
     for date_,price in offering:
         print date_
 
+
+class MSPP(object):
+
+    def __init__(self,company):
+        self.parser = None
+        self.contribution = None
+        self.company = company
+        self.closing = None
+        self.offering = None
+        self.exercise = None
+        self.lookback = None
+        self.exercise_periods = None
+
+    def compare(self):
+        self.contribution = 120 * 2 * 6
+        self.company = sys.argv[1]
+        self.closing = load_closing_data(self.company + '.csv')
+        self.offering = offering(self.closing)
+        self.exercise = exercise(self.closing)
+        self.exercise_periods = exercise_periods(self.offering,self.exercise)
+        self.lookback = lookback(self.exercise_periods)
+        shares = buy_and_hold(self.lookback,self.contribution)
+        print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,self.closing[0][1],shares * self.closing[0][1])
+        print "buy and sell profit: %.2f" % (buy_and_sell(self.lookback,self.contribution))
+
+    def bootstrap(self):
+        write_csv(self.company)
+
+    def offering_dates(self):
+        print_offering_dates(self.offering)
         
 if __name__ == "__main__":
-    company = sys.argv[1]
-    #write_csv(company)
-    closing = load_closing_data(company + '.csv')
-    #print_offering_dates(offering(closing))
-    #epds = exercise_periods(offering(closing),exercise(closing),'2010-04-01')
-    epds = exercise_periods(offering(closing),exercise(closing))
-    
-    
-    period_contribution = 120 * 2 * 6
-    lookback_ = lookback(epds)
-    
-    shares = buy_and_hold(lookback_,period_contribution)
-    print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,closing[0][1],shares * closing[0][1])
-    
-    print "buy and sell profit: %.2f" % (buy_and_sell(lookback_,period_contribution))
+    mspp = MSPP('adsk')
+    mspp.bootstrap()
+    mspp.compare()
