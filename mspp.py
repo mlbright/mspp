@@ -114,12 +114,12 @@ def lookback(eperiods):
     return lookback_
         
 def exercise_periods(offering,exercise):
-    return [(off[0],off[1],ex[0],ex[1]) for off,ex in zip(offering,exercise[1:])]
+    tmp = [(off[0],off[1],ex[0],ex[1]) for off,ex in zip(offering,exercise[1:])]
     
-def verify(eperiods):
-    
-    for rec in eperiods:
-        print rec
+    #for rec in tmp:
+    #   print rec
+        
+    return tmp
         
 def buy_and_hold(lookback_,contribution):
     shares = 0
@@ -135,10 +135,12 @@ def buy_and_hold(lookback_,contribution):
 def buy_and_sell(lookback_,contribution):
 
     profit = 0
-    for ex_date_,price in lookback_:
-        price = 0.85 * price
-        shares = contribution / price
-        profit += shares
+    for exercise_date_,sell_price in lookback_:
+        buy_price = 0.85 * sell_price
+        shares = contribution / buy_price
+        profit += shares * sell_price
+        
+    return profit
     
 def print_offering_dates(offering):
     for date_,price in offering:
@@ -153,8 +155,9 @@ if __name__ == "__main__":
     epds = exercise_periods(offering(closing),exercise(closing))
     #verify(epds)
     monthly_contribution = 400
-    shares = buy_and_hold(lookback(epds),monthly_contribution)
+    lookback_ = lookback(epds)
+    shares = buy_and_hold(lookback_,monthly_contribution)
     print "buy and hold #shares: %.2f" % (shares)
-    print "buy and hold current value: %.2f" % (shares * closing[-1][1])
+    print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,closing[0][1],shares * closing[0][1])
     
-    
+    print "buy and sell profit: %.2f" % (buy_and_sell(lookback_,monthly_contribution))
