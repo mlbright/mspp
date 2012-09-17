@@ -5,13 +5,13 @@ import re
 import urllib
 import sys
 
-def __adjust_month(month):
+def adjust_month(month):
     if month > 12 or month < 1:
         raise Exception("Invalid month")
     month -= 1 # Month for yahoo is 0 based
     return month
 
-def __get_last_day(month):
+def get_last_day(month):
     ret = 31
     if month in (4, 6, 9, 11):
         ret = 30
@@ -21,9 +21,9 @@ def __get_last_day(month):
 
 def download_instrument_prices(instrument, fromMonth, fromYear, toMonth, toYear):
     fromDay = 1
-    toDay = __get_last_day(toMonth)
-    fromMonth = __adjust_month(fromMonth)
-    toMonth = __adjust_month(toMonth)
+    toDay = get_last_day(toMonth)
+    fromMonth = adjust_month(fromMonth)
+    toMonth = adjust_month(toMonth)
     url = "http://ichart.finance.yahoo.com/table.csv?s=%s&a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&g=d&ignore=.csv"
     url = url % (instrument, fromMonth, fromDay, fromYear, toMonth, toDay, toYear)
 
@@ -175,7 +175,6 @@ if __name__ == "__main__":
     lookback_ = lookback(epds)
     
     shares = buy_and_hold(lookback_,period_contribution)
-    print "buy and hold #shares: %.2f" % (shares)
     print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,closing[0][1],shares * closing[0][1])
     
     print "buy and sell profit: %.2f" % (buy_and_sell(lookback_,period_contribution))
