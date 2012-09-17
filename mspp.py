@@ -47,18 +47,19 @@ def write_csv(instrument):
     with open(instrument + '.csv','w') as f:
         f.write(get_daily_csv(instrument,2000,2012))
 
-def load_data(csvfile):
-    closing = []
+def load_closing_data(csvfile):
+    tmp = []
 
     with open(csvfile, 'rb') as f:
         reader = csv.reader(f)
-        for row in reader:
-            closing.append((row[0],row[-1]))
-
-    return closing
-
-def offering_data(closing_data):
-    assert len(closing_data) >= 2
+        tmp = [ (row[0],row[-1]) for row in reader ]
+    
+    tmp = [ (date_,float(price)) for date_,price in tmp[1:] ]
+    assert len(tmp) >= 2
+    return tmp
+    
+def offering(closing_data):
+    
     oct_re = re.compile(r'.+-10-\d\d$')
     apr_re = re.compile(r'.+-04-\d\d$')
     offering = []
@@ -72,7 +73,7 @@ def offering_data(closing_data):
     offering.reverse()    
     return offering
 
-def exercise_data(closing_data):
+def exercise(closing_data):
     exercise = []
     mar_re = re.compile(r'.+-03-\d\d$')
     sep_re = re.compile(r'.+-09-\d\d$')
@@ -86,33 +87,74 @@ def exercise_data(closing_data):
     exercise.reverse()
     return exercise
 
-def buy_and_hold(offering,exercise):
-    shares = 0
-    contribution = 1000
-    count = 4
-    for off,ex in zip(offering,exercise[1:]):
+def lookback(eperiods):
+    lookback_ =  []
+    reset = 0
+    offering_price = eperiods[0][1]
+    purchase_price = None
+    for period in eperiods:
         
-        count -= 1
+        if reset == 0:
+            #print "price reset!",
+            reset = 4
+            offering_price = period[1]
+            
+           
+        purchase_price = min(offering_price,period[3])
+        lookback_.append((period[2],purchase_price))
         
-        price = 0.85 * min(float(ex[1]),float(off[1])) * 1.0
-        shares += contribution / price
+        #print period,purchase_price
         
-        print "%s %s %s %s" % (off[0],off[1],ex[0],ex[1]),
-        
-        if ex[1] < off[1] or count == 0:
-            count = 4
-            print "reset"
+        if period[3] < offering_price:
+            reset = 0
         else:
-            print "no reset"
+            reset -= 1
+
         
+    return lookback_
         
-    print shares
+def exercise_periods(offering,exercise):
+    return [(off[0],off[1],ex[0],ex[1]) for off,ex in zip(offering,exercise[1:])]
+    
+def verify(eperiods):
+    
+    for rec in eperiods:
+        print rec
+        
+def buy_and_hold(lookback_,contribution):
+    shares = 0
+    
+    for ex_date_,price in lookback_:
+                
+        price = 0.85 * price
+        shares += contribution / price
+
+        
+    return shares
+
+def buy_and_sell(lookback_,contribution):
+
+    profit = 0
+    for ex_date_,price in lookback_:
+        price = 0.85 * price
+        shares = contribution / price
+        profit += shares
+    
+def print_offering_dates(offering):
+    for date_,price in offering:
+        print date_
 
         
 if __name__ == "__main__":
     company = sys.argv[1]
     #write_csv(company)
-    closing_data = load_data(company + '.csv')
-    offering_prices = offering_data(closing_data)
-    exercise_prices = exercise_data(closing_data)
-    buy_and_hold(offering_prices,exercise_prices)
+    closing = load_closing_data(company + '.csv')
+    #print_offering_dates(offering(closing))
+    epds = exercise_periods(offering(closing),exercise(closing))
+    #verify(epds)
+    monthly_contribution = 400
+    shares = buy_and_hold(lookback(epds),monthly_contribution)
+    print "buy and hold #shares: %.2f" % (shares)
+    print "buy and hold current value: %.2f" % (shares * closing[-1][1])
+    
+    
