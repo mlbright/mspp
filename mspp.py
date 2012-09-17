@@ -157,9 +157,9 @@ def buy_and_sell(lookback_,contribution):
 
 
     
-def print_offering_dates(offering):
-    for date_,price in offering:
-        print date_
+def print_offering_dates(ex_periods):
+    for off_date_,off_price,ex_date_,ex_price in ex_periods:
+        print "%s %.2f %s %.2f" % (off_date_,off_price,ex_date_,ex_price)
 
 
 class MSPP(object):
@@ -185,10 +185,10 @@ class MSPP(object):
         write_csv(self.company)
 
     def offering_dates(self):
-        print_offering_dates(self.offering)
+        print_offering_dates(self.exercise_periods)
         
 if __name__ == "__main__":
     company = sys.argv[1]
     mspp = MSPP(company,'2010-04-01',bootstrap=True)
-    #mspp.offering_dates()
+    mspp.offering_dates()
     mspp.compare()
