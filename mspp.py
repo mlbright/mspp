@@ -171,7 +171,7 @@ if __name__ == "__main__":
     epds = exercise_periods(offering(closing),exercise(closing))
     
     
-    period_contribution = 100 * 2 * 6
+    period_contribution = 120 * 2 * 6
     lookback_ = lookback(epds)
     
     shares = buy_and_hold(lookback_,period_contribution)
