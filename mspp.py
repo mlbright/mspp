@@ -113,8 +113,18 @@ def lookback(eperiods):
         
     return lookback_
         
-def exercise_periods(offering,exercise):
-    tmp = [(off[0],off[1],ex[0],ex[1]) for off,ex in zip(offering,exercise[1:])]
+def exercise_periods(offering,exercise,offering_date=None):
+    tmp = []
+    if offering_date:
+        include = False
+        for off,ex in zip(offering,exercise[1:]):
+            
+            if off[0] == offering_date:
+                include = True
+            if include:
+                tmp.append((off[0],off[1],ex[0],ex[1]))
+    else:
+        tmp = [(off[0],off[1],ex[0],ex[1]) for off,ex in zip(offering,exercise[1:])]
     
     #for rec in tmp:
     #   print rec
@@ -135,12 +145,17 @@ def buy_and_hold(lookback_,contribution):
 def buy_and_sell(lookback_,contribution):
 
     profit = 0
-    for exercise_date_,sell_price in lookback_:
-        buy_price = 0.85 * sell_price
+    for exercise_date_,price in lookback_:
+        """
+        buy_price = 0.85 * price
         shares = contribution / buy_price
-        profit += shares * sell_price
+        profit += shares * price
+        """
+        profit += contribution / 0.85
         
     return profit
+
+
     
 def print_offering_dates(offering):
     for date_,price in offering:
@@ -152,12 +167,15 @@ if __name__ == "__main__":
     #write_csv(company)
     closing = load_closing_data(company + '.csv')
     #print_offering_dates(offering(closing))
+    #epds = exercise_periods(offering(closing),exercise(closing),'2010-04-01')
     epds = exercise_periods(offering(closing),exercise(closing))
-    #verify(epds)
-    monthly_contribution = 400
+    
+    
+    period_contribution = 100 * 2 * 6
     lookback_ = lookback(epds)
-    shares = buy_and_hold(lookback_,monthly_contribution)
+    
+    shares = buy_and_hold(lookback_,period_contribution)
     print "buy and hold #shares: %.2f" % (shares)
     print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,closing[0][1],shares * closing[0][1])
     
-    print "buy and sell profit: %.2f" % (buy_and_sell(lookback_,monthly_contribution))
+    print "buy and sell profit: %.2f" % (buy_and_sell(lookback_,period_contribution))
