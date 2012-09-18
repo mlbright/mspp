@@ -127,9 +127,6 @@ def exercise_periods(offering,exercise,offering_date=None):
     else:
         tmp = [(off[0],off[1],ex[0],ex[1]) for off,ex in zip(offering,exercise[1:])]
     
-    #for rec in tmp:
-    #   print rec
-        
     return tmp
         
 def buy_and_hold(lookback_,contribution):
@@ -177,11 +174,12 @@ class MSPP(object):
         
         
 
-    def compare(self,offering_date=None,contribution=100):
+    def compare(self,offering_date=None,contribution=100.0):
         
         self.exercise_periods = exercise_periods(self.offering,self.exercise,offering_date)
         self.lookback = lookback(self.exercise_periods)
         shares = buy_and_hold(self.lookback,contribution)
+        print "Exercise contribution: %.2f" % (contribution)
         print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,self.closing[0][1],shares * self.closing[0][1])
         print "buy and sell profit: %.2f" % (buy_and_sell(self.lookback,contribution))
 
