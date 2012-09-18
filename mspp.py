@@ -217,7 +217,6 @@ def run():
         mspp = MSPP(args.ticker)
         mspp.compare(args.offering_date,args.contribution)
 
-
-
+        
 if __name__ == "__main__":
     run()
