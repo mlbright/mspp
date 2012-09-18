@@ -1,4 +1,3 @@
-You know who you are.
 
 Get the closing data for Oracle:
 
@@ -8,6 +7,6 @@ List offering and exercise data:
 
 $ python mspp.py list orcl
 
-Compare buy-and-sell strategy with a buy and hold strategy, given offering date and contribution
+Compare buy-and-sell strategy with a buy-and-hold strategy, given offering date and contribution
 
 $ python mspp.py compare -o 2005-04-01 -c 1000 orcl
