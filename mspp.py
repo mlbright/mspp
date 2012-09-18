@@ -4,6 +4,7 @@ import csv
 import re
 import urllib
 import sys
+import argparse
 
 def adjust_month(month):
     if month > 12 or month < 1:
@@ -164,31 +165,59 @@ def print_offering_dates(ex_periods):
 
 class MSPP(object):
 
-    def __init__(self,company,offering_date=None,bootstrap=False):
+    def __init__(self,company,init=False):
         self.company = company
-        if bootstrap:
+        if init:
             write_csv(self.company)
-        self.parser = None
-        self.contribution = 120 * 2 * 6
+        
+        
         self.closing = load_closing_data(self.company + '.csv')
         self.offering = offering(self.closing)
         self.exercise = exercise(self.closing)
+        
+        
+
+    def compare(self,offering_date=None,contribution=100):
+        
         self.exercise_periods = exercise_periods(self.offering,self.exercise,offering_date)
         self.lookback = lookback(self.exercise_periods)
-
-    def compare(self):
-        shares = buy_and_hold(self.lookback,self.contribution)
+        shares = buy_and_hold(self.lookback,contribution)
         print "buy and hold current value (#shares %.2f * price %.2f): %.2f" % (shares,self.closing[0][1],shares * self.closing[0][1])
-        print "buy and sell profit: %.2f" % (buy_and_sell(self.lookback,self.contribution))
-
-    def bootstrap(self):
-        write_csv(self.company)
+        print "buy and sell profit: %.2f" % (buy_and_sell(self.lookback,contribution))
 
     def offering_dates(self):
+        self.exercise_periods = exercise_periods(self.offering,self.exercise,offering_date=None)
         print_offering_dates(self.exercise_periods)
+
         
+def run():
+    parser = argparse.ArgumentParser(description='Compare strategies')
+    subparsers = parser.add_subparsers(dest='subparser_name',help='sub-command help')
+    
+    parser_init = subparsers.add_parser('init',help='bootstrap the utility')
+    parser_init.add_argument('ticker',default='rht',help='the company you will buy stock of')
+    
+    parser_compare = subparsers.add_parser('compare',help='compare trading strategies')
+    parser_compare.add_argument('-o','--offering-date',dest='offering_date',default=None,help='your offering date: default is first offering date available')
+    parser_compare.add_argument('-c','--contribution',type=float,dest='contribution',default=100*2*6,help='paycheck contribution to plan')
+    parser_compare.add_argument('ticker',default='rht',help='specify ticker in case multiple .csv files are in your directory')
+    
+    parser_list_dates = subparsers.add_parser('list',help='list offering and exercise period info')
+    parser_list_dates.add_argument('ticker',default='rht',help='specify ticker in case multiple .csv files are in your directory')
+    
+    args = parser.parse_args()
+    
+    if args.subparser_name == 'init':
+        mspp = MSPP(args.ticker,True)
+        
+    elif args.subparser_name == 'list':
+        mspp = MSPP(args.ticker)
+        mspp.offering_dates()
+    elif args.subparser_name == 'compare':
+        mspp = MSPP(args.ticker)
+        mspp.compare(args.offering_date,args.contribution)
+
+
+
 if __name__ == "__main__":
-    company = sys.argv[1]
-    mspp = MSPP(company,'2010-04-01',bootstrap=True)
-    mspp.offering_dates()
-    mspp.compare()
+    run()
